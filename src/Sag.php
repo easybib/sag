@@ -21,7 +21,7 @@ require_once('httpAdapters/SagCURLHTTPAdapter.php');
 /**
  * The Sag class provides the core functionality for talking to CouchDB.
  *
- * @version 0.7.1
+ * @version 0.8.0
  * @package Core
  */
 class Sag {
@@ -98,7 +98,7 @@ class Sag {
    */
   public function setHTTPAdapter($type = null) {
     if(!$type) {
-      $type = self::$HTTP_NATIVE_SOCKETS;
+      $type = extension_loaded("curl") ? self::$HTTP_CURL : self::$HTTP_NATIVE_SOCKETS;
     }
 
     // nothing to be done
@@ -193,12 +193,21 @@ class Sag {
         $user = urlencode($user);
         $pass = urlencode($pass);
 
-        $res = $this->procPacket('POST', '/_session', "name=$user&password=$pass", array('Content-Type' => 'application/x-www-form-urlencoded'));
+        $res = $this->procPacket(
+          'POST',
+          '/_session',
+          sprintf('name=%s&password=%s', $user, $pass),
+          array('Content-Type' => 'application/x-www-form-urlencoded')
+        );
+
         $this->authSession = $res->cookies->AuthSession;
+
         return $this->authSession;
+
         break;
     }
 
+    //should never reach this line
     throw new SagException("Unknown auth type for login().");
   }
 
@@ -1075,7 +1084,7 @@ class Sag {
 
     // Build the request packet.
     $headers["Host"] = "{$this->host}:{$this->port}";
-    $headers["User-Agent"] = "Sag/0.7.1";
+    $headers["User-Agent"] = "Sag/0.8.0";
 
     /*
      * This prevents some unRESTful requests, such as inline attachments in

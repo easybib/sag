@@ -4,7 +4,7 @@
  * you more advanced features, like SSL supports, with the cost of an
  * additional dependency that your shared hosting environment might now have. 
  *
- * @version 0.7.1
+ * @version 0.8.0
  * @package HTTP
  */
 require_once('SagHTTPAdapter.php');
@@ -93,7 +93,7 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
       $response->body = '';
 
       // split headers and body
-      list($headers, $response->body) = explode("\r\n\r\n", $chResponse);
+      list($headers, $response->body) = explode("\r\n\r\n", $chResponse, 1);
 
       // split up the headers
       $headers = explode("\r\n", $headers);

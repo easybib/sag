@@ -205,6 +205,23 @@ class SagTest extends PHPUnit_Framework_TestCase
     $this->assertTrue($result > 0);
   }
 
+  public function test_queryEmptyView() {
+    $ddoc = new stdClass();
+    $ddoc->_id = '_design/app';
+    $ddoc->language = 'javascript';
+    $ddoc->views = new stdClass();
+    $ddoc->views->none = new stdClass();
+    $ddoc->views->none->map = 'function() { }';
+
+    $ddocResult = $this->couch->put($ddoc->_id, $ddoc);
+    $this->assertTrue($ddocResult->body->ok);
+
+    $result = $this->couch->get('/_design/app/_view/none');
+
+    $this->assertTrue(is_object($result->body), 'Make sure we parsed the JSON object properly');
+    $this->assertTrue(is_array($result->body->rows));
+  }
+
   public function test_getIDNoDecode()
   {
     $this->couch->decode(false);
@@ -475,17 +492,9 @@ class SagTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($data, $this->couch->get("/$docID/$name")->body);
   }
 
-  public function test_createSession()
-  {
-    try
-    {
-      $this->session_couch->login($this->couchAdminName, $this->couchAdminPass, Sag::$AUTH_COOKIE);
-    }
-    catch(Exception $e)
-    {
-      //should not happen - FAIL
-      $this->assertTrue(false);
-    }
+  public function test_createSession() {
+    $resp = $this->session_couch->login($this->couchAdminName, $this->couchAdminPass, Sag::$AUTH_COOKIE);
+    $this->assertTrue(is_string($resp->body), 'Got a string back');
   }
 
   public function test_getSession() {
@@ -508,8 +517,7 @@ class SagTest extends PHPUnit_Framework_TestCase
     $this->couch->login($this->couchAdminName, $this->couchAdminPass);
   }
 
-  public function test_createDocWithSession()
-  {
+  public function test_createDocWithSession() {
     $db = new Sag($this->couchIP, $this->couchPort);
     $db->setDatabase($this->couchDBName);
     $db->login($this->couchAdminName, $this->couchAdminPass, Sag::$AUTH_COOKIE);

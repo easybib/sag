@@ -14,11 +14,11 @@
 VERSION := $(shell sed --expression '/^Version /!d' --expression 's/^Version //' README)
 
 # Main directories and files
-PREFIX :=
-SRC_DIR := ${PREFIX}src
-TESTS_DIR := ${PREFIX}tests
-EXAMPLES_DIR := ${PREFIX}examples
-FILES := ${PREFIX}CHANGELOG ${PREFIX}LICENSE ${PREFIX}NOTICE ${PREFIX}README
+PREFIX := .
+SRC_DIR := ${PREFIX}/src
+TESTS_DIR := ${PREFIX}/tests
+EXAMPLES_DIR := ${PREFIX}/examples
+FILES := ${PREFIX}/CHANGELOG ${PREFIX}/LICENSE ${PREFIX}/NOTICE ${PREFIX}/README
 
 # Main binaries
 PHPDOC := phpdoc
@@ -28,7 +28,7 @@ MD5SUM := md5sum
 SHA1SUM := sha1sum
 
 # Distribution locations
-DIST_DIR := ${PREFIX}sag-${VERSION}
+DIST_DIR := ${PREFIX}/sag-${VERSION}
 DIST_FILE := ${DIST_DIR}.tar.gz
 DIST_FILE_SIG := ${DIST_FILE}.sig
 DIST_FILE_SHA1 := ${DIST_FILE}.sha
@@ -44,15 +44,16 @@ TESTS_CONFIG_CURL := ${TESTS_DIR}/phpunitConfig-cURL.xml
 TESTS_CONFIG_SSL_CURL := ${TESTS_DIR}/phpunitConfig-SSL-cURL.xml
 
 TESTS_PHPUNIT_OPTS_BASE := -d "include_path=${TESTS_PHP_INCLUDE_PATH}" \
-                            -d "error_reporting=\"E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_ERROR|E_CORE_ERROR\""
+                            --strict --process-isolation \
+                            -d "error_reporting=\"E_ALL & E_STRICT\""
 
 TESTS_PHPUNIT_OPTS_NATIVE := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TESTS_CONFIG_NATIVE_SOCKETS}
 TESTS_PHPUNIT_OPTS_CURL := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TESTS_CONFIG_CURL}
 TESTS_PHPUNIT_OPTS_SSL_CURL := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TESTS_CONFIG_SSL_CURL}
 
 # PHPDocs related tools and files
-DOCS_DIR := ${PREFIX}docs
-PHPDOC_OPTS := -d ${SRC_DIR} -t ${DOCS_DIR} -o HTML:Smarty:PHP -dn Core -ti "Sag Documentation"
+DOCS_DIR := ${PREFIX}/docs
+PHPDOC_OPTS := -d ${SRC_DIR} -t ${DOCS_DIR} --title "Sag Documentation" --defaultpackagename "Core" --template "abstract"
 
 # Build the distribution
 dist: clean ${DIST_DIR}
@@ -99,6 +100,9 @@ checkCoverage:
 
 checkCoverageCURL:
 	${MAKE} checkCURL TESTS_PHPUNIT_OPTS_CURL="${TESTS_PHPUNIT_OPTS_CURL} --coverage-html=${TESTS_COVERAGE_DIR}"
+
+checkCoverageCURL_SSL:
+	${MAKE} checkCURL_SSL TESTS_PHPUNIT_OPTS_CURL="${TESTS_PHPUNIT_OPTS_SSL_CURL} --coverage-html=${TESTS_COVERAGE_DIR}"
 
 # Generate documentation with PHPDocumentation
 docs:
