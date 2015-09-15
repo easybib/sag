@@ -782,7 +782,7 @@ class Sag {
       $data->filter = $filter;
 
       if($filterQueryParams) {
-        $data->filterQueryParams = $filterQueryParams;
+        $data->query_params = $filterQueryParams;
       }
     }
 
