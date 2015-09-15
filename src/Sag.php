@@ -782,7 +782,7 @@ class Sag {
       $data->filter = $filter;
 
       if($filterQueryParams) {
-        $data->filterQueryParams = $filterQueryParams;
+        $data->query_params = $filterQueryParams;
       }
     }
 
@@ -1061,6 +1061,10 @@ class Sag {
 
   public function getPathPrefix() {
     return $this->pathPrefix;
+  }
+
+  public function getHTTPAdapter() {
+    return $this->httpAdapter;
   }
 
   // The main driver - does all the socket and protocol work.

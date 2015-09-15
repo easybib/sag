@@ -14,6 +14,11 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
 
   private $followLocation; //whether cURL is allowed to follow redirects
 
+  private $curlinfoLogger = false;
+
+  private $curlCalls = 0;
+  private $maxCurlCalls = 1000;
+
   public function __construct($host, $port) {
     if(!extension_loaded('curl')) {
       throw new SagException('Sag cannot use cURL on this system: the PHP cURL extension is not installed.');
@@ -36,12 +41,24 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
     curl_close($this->ch);
   }
 
+  public function setCurlinfoLogger($logger)
+  {
+    $this->curlinfoLogger = $logger;
+  }
+
+  public function recycleCurlAfter($calls)
+  {
+    $this->maxCurlCalls = $calls;
+  }
+
   public function procPacket($method, $url, $data = null, $reqHeaders = array(), $specialHost = null, $specialPort = null) {
 
-    // destroy and recreate curl handle because otherwise weird things
-    // happen if you make multiple requests with the same connection
-    curl_close($this->ch);
-    $this->ch = curl_init();
+    $this->curlCalls += 1;
+    if ($this->curlCalls >= $this->maxCurlCalls) {
+        curl_close($this->ch);
+        $this->ch = curl_init();
+        $this->curlCalls = 0;
+    }
 
     // the base cURL options
     $opts = array(
@@ -101,9 +118,14 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
       }
     }
 
+    curl_reset($this->ch);
     curl_setopt_array($this->ch, $opts);
 
     $chResponse = curl_exec($this->ch);
+    if ($this->curlinfoLogger) {
+        $fn = $this->curlinfoLogger;
+        $fn(curl_getinfo($this->ch));
+    }
 
     if($chResponse !== false) {
       // prepare the response object
